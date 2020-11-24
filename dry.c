@@ -23,4 +23,5 @@ int main(){
     char* s="place now\n";
     char* d=stringDuplicator(s,3);
     printf("%s",d);
+    return 0;
 }
