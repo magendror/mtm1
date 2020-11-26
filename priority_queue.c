@@ -32,3 +32,13 @@ PriorityQueue pqCreate(CopyPQElement copy_element,
     queue->copy_element=copy_element;
     return queue;
 }
+
+void pqDestroy(PriorityQueue queue){  
+    while(queue){     
+        PriorityQueue to_delete = queue;
+        queue=pqGetNext(queue);
+        to_delete->free_element(to_delete->element);
+        to_delete->free_priority(to_delete->priority);
+        free(to_delete);
+        }
+}
