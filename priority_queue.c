@@ -2,22 +2,28 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
+
 #define INPUT_IS_NULL -1
 #define ELEMENT_FOR(iterator) \
    pqGetFirst(queue);\
-   for(iterator;iterator!=NULL;iterator=iterator->next)
+   for(queue->iterator;queue->iterator!=NULL;queue->iterator=queue->iterator->next)
+
+typedef struct element_struct{
+    PQElementPriority element_priority;
+    PQElement element_data;
+    struct element_struct* next;
+}*Element;
+
 struct PriorityQueue_t{
-    struct PriorityQueue_t* next;
-    PQElementPriority priority;
-    PQElement element;
+    Element element_list;
     CopyPQElement copy_element;
     FreePQElement free_element;
     EqualPQElements equal_elements;
     CopyPQElementPriority copy_priority;
     FreePQElementPriority free_priority;
     ComparePQElementPriorities compare_priorities;
-    PQElement iterator;
-    PQElement first_element;
+    Element iterator;
+    Element first_element;
 };
 
 PriorityQueue pqCreate(CopyPQElement copy_element,
@@ -26,9 +32,19 @@ PriorityQueue pqCreate(CopyPQElement copy_element,
                        CopyPQElementPriority copy_priority,
                        FreePQElementPriority free_priority,
                        ComparePQElementPriorities compare_priorities){
+    if(!pqFuncValid(copy_element,free_element,equal_elements,copy_priority,free_priority,compare_priorities)){
+        return NULL;
+    }
     PriorityQueue queue=malloc(sizeof(PriorityQueue));
-    queue->element=NULL;
-    queue->priority=NULL;
+    if (queue==NULL){
+        return NULL;
+    }
+    Element element_list=malloc(sizeof(PriorityQueue));
+    if (queue==NULL){
+        free(queue);
+        return NULL;
+    }
+    queue->element_list=element_list;
     queue->compare_priorities=compare_priorities;
     queue->copy_priority=copy_priority;
     queue->free_priority=free_priority;
@@ -40,20 +56,27 @@ PriorityQueue pqCreate(CopyPQElement copy_element,
     return queue;
 }
 
-void pqDestroy(PriorityQueue queue){  
-    while(queue){     
-        PriorityQueue to_delete = queue;
-        queue=pqGetNext(queue);
-        to_delete->free_element(to_delete->element);
-        to_delete->free_priority(to_delete->priority);
-        free(to_delete);
-        }
+static bool pqFuncValid(CopyPQElement copy_element,
+                       FreePQElement free_element,
+                       EqualPQElements equal_elements,
+                       CopyPQElementPriority copy_priority,
+                       FreePQElementPriority free_priority,
+                       ComparePQElementPriorities compare_priorities){
+
+    if (copy_element&&free_element&&equal_elements&&copy_priority&&free_priority&&compare_priorities){
+    return true;
+    }
+    return false;
 }
-typedef struct element_struct{
-    PQElementPriority element_priority;
-    PQElement element_data;
-    struct element_struct* next;
-}*Element;
+
+void pqDestroy(PriorityQueue queue){  
+    ELEMENT_FOR(iterator){
+        queue->free_element(queue->iterator->element_data);
+        queue->free_priority(queue->iterator->element_priority);
+    }
+    free(queue->element_list);
+    free(queue);
+}
 
 int pqGetSize(PriorityQueue queue){
     if(!queue){
@@ -141,11 +164,13 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element, PQE
 }
 static PQElement find_element(PriorityQueue queue, PQElement element, PQElementPriority old_priority){
     ELEMENT_FOR(current_element){
-        if((queue->equal_elements(element,current_element)&&(current_element->element_priority==old_priority)){
+        if((queue->equal_elements(element,current_element)&&(current_element->element_priority==old_priority))){
             return current_element;
-        }
-        return NULL;
+        }   
+    }
+    return NULL;
 }
+
 PQElement pqGetFirst(PriorityQueue queue){
     if(!queue){
         return NULL;
@@ -162,4 +187,26 @@ PQElement pqGetNext(PriorityQueue queue){
     return queue->iterator;
 }
 
+PriorityQueue pqCopy(PriorityQueue queue){
+    if(queue==NULL){
+        return NULL;
+    }
+    PriorityQueue copy_queue =pqCreate(queue->copy_element,queue->free_element,
+                                        queue->equal_elements, queue->copy_priority,
+                                        queue->free_priority,queue->compare_priorities);
+    ELEMENT_FOR(iterator){
+        pqInsert(copy_queue,queue->iterator->element_data,queue->iterator->element_priority);
+    }                                    
+    return copy_queue;
+}
 
+PriorityQueueResult pqRemove(PriorityQueue queue){
+    if(queue==NULL){
+        return PQ_NULL_ARGUMENT;
+    }
+    queue->iterator=queue->first_element->next;
+    queue->free_element(queue->first_element->element_data);
+    queue->free_priority(queue->first_element->element_priority);
+    free(queue->first_element);
+    queue->first_element=queue->iterator;
+}
