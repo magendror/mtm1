@@ -87,19 +87,6 @@ int pqGetSize(PriorityQueue queue){
     return pq_size;
 }
 
-bool pqContains(PriorityQueue queue, PQElement element){
-    if(!queue||!element){
-            assert(element==NULL||queue==NULL);
-            return false;
-        }
-    ELEMENT_FOR(queue){
-        if(queue->equal_elements(element,queue->iterator->element_data)){
-            return true;
-        }
-    }
-    return false;
-}
-
 PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPriority priority){
     if(!queue||!element||!priority){
         return PQ_NULL_ARGUMENT;
@@ -131,7 +118,7 @@ PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPr
     }
 }
 
-static PQElement elementCreate(PQElement element, PQElementPriority priority){
+static Element elementCreate(PQElement element, PQElementPriority priority){
     Element new_element=malloc(sizeof(*new_element));
     if(!new_element){
         return NULL;
@@ -216,4 +203,29 @@ PriorityQueueResult pqRemove(PriorityQueue queue){
     queue->first_element=queue->iterator;
     queue->iterator=NULL;
     return PQ_SUCCESS;
+}
+
+PriorityQueueResult pqRemoveElement(PriorityQueue queue, PQElement element){
+
+
+}
+
+static Element pqContainsAndWhere(PriorityQueue queue, PQElement element){
+    if(!queue||!element){
+        assert(element==NULL||queue==NULL);
+        return NULL;
+    }
+    ELEMENT_FOR(queue){
+        if(queue->equal_elements(element,queue->iterator->element_data)){
+            return queue->iterator;
+        }
+    }
+    return NULL;
+}
+
+bool pqContains(PriorityQueue queue, PQElement element){
+    if(pqContainsAndWhere(queue,element)==NULL){
+        return false;
+    }
+    return true;
 }
