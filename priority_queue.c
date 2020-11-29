@@ -133,7 +133,7 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element, PQE
     if((!queue)||(!element)||(!old_priority)||(!new_priority)){
         return PQ_NULL_ARGUMENT;
     }
-    Element change_element_following=find_element(queue,element,old_priority);
+    Element change_element_following=findElementFollowing(queue,element,old_priority);
     if(!change_element_following){
         return PQ_ELEMENT_DOES_NOT_EXISTS;
     }
@@ -146,7 +146,7 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element, PQE
     return PQ_SUCCESS;
 }
 
-static Element find_element(PriorityQueue queue, PQElement element, PQElementPriority priority){
+static Element findElementFollowing(PriorityQueue queue, PQElement element, PQElementPriority priority){
     if((queue->equal_elements(element,queue->first_element->element_data)&&
             (queue->first_element->element_priority==priority))){
                 return queue->first_element;
@@ -206,8 +206,21 @@ PriorityQueueResult pqRemove(PriorityQueue queue){
 }
 
 PriorityQueueResult pqRemoveElement(PriorityQueue queue, PQElement element){
-
-
+    if(!queue||!element){
+        assert(element==NULL||queue==NULL);
+        return PQ_NULL_ARGUMENT;
+    }
+    Element delete_elemnt_following = findElementFollowingNoPriority(queue,element);
+    if (delete_elemnt_following==NULL){
+        return PQ_ELEMENT_DOES_NOT_EXISTS;
+    }
+    Element to_be_deleted=delete_elemnt_following->next;
+    queue->free_element(to_be_deleted->element_data);
+    queue->free_priority(to_be_deleted->element_priority);
+    delete_elemnt_following->next=delete_elemnt_following->next->next;
+    free(to_be_deleted);
+    queue->iterator=NULL;
+    return PQ_SUCCESS;
 }
 
 static Element pqContainsAndWhere(PriorityQueue queue, PQElement element){
@@ -229,3 +242,19 @@ bool pqContains(PriorityQueue queue, PQElement element){
     }
     return true;
 }
+
+static Element findElementFollowingNoPriority(PriorityQueue queue, PQElement element){
+    if(queue->equal_elements(element,queue->first_element->element_data)){
+                return queue->first_element;
+            }
+    ELEMENT_FOR(queue){
+        if(queue->iterator->next==NULL){
+            return NULL;
+        }
+        else if(queue->equal_elements(element,queue->iterator->next->element_data)){
+            return queue->iterator;
+        }   
+    }
+}
+
+PriorityQueueResult pqClear(PriorityQueue queue)
