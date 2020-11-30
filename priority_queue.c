@@ -63,11 +63,7 @@ static bool pqFuncValid(CopyPQElement copy_element,
 }
 
 void pqDestroy(PriorityQueue queue){  
-    ELEMENT_FOR(queue){
-        queue->free_element(queue->iterator->element_data);
-        queue->free_priority(queue->iterator->element_priority);
-    }
-    free(queue->first_element);
+    pqClear(queue);
     free(queue);
 }
 
@@ -269,5 +265,16 @@ static Element findElementFollowingNoPriority(PriorityQueue queue, PQElement ele
 }
 
 PriorityQueueResult pqClear(PriorityQueue queue){
-   int* iterator = (int*) pqGetFirst(queue);
+    if(queue=NULL){
+        return PQ_NULL_ARGUMENT;
+    }
+    queue->iterator=queue->first_element;
+    while(queue->iterator==NULL){
+        Element to_delete = queue->iterator;
+        queue->iterator=queue->iterator->next;
+        queue->free_priority(to_delete->element_priority);
+        queue->free_element(to_delete->element_data);
+        free(queue->iterator);
+    }
+    return PQ_SUCCESS;
 }
