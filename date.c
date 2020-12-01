@@ -8,6 +8,36 @@ struct Date_t{
     int year;
 };
 
+static bool is_date_llegal(int day, int month){
+    bool day_llegal=(day>=1)&&(day<=30);
+    bool month_llegal=(month>=1)&&(month<=12);
+    return (month_llegal&&day_llegal);
+}
+
+Date dateCreate(int day, int month, int year){
+    if(!is_date_llegal(day,month)){
+        return NULL;
+    }
+    Date date=malloc(sizeof(Date));
+    if(date==NULL){
+        return NULL;
+    }
+    date->day=day;
+    date->month=month;
+    date->year=year;
+    return date;
+}
+
+void dateDestroy(Date date){
+    free(date);
+}
+
+Date dateCopy(Date date){
+    if(date==NULL){
+        return NULL;
+    }
+    return dateCreate(date->day,date->month,date->year);
+}
 bool dateGet(Date date, int* day, int* month, int* year){
     if(date==NULL||day==NULL||month==NULL||year==NULL){
         return false;
