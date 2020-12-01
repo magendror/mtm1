@@ -124,8 +124,8 @@ static Element elementCreate(PriorityQueue queue,PQElement element, PQElementPri
     }
     new_element->element_data=queue->copy_element(element);
         if(new_element->element_data==NULL){
-        queue->free_priority(new_element->element_priority);
-        return NULL;
+            queue->free_priority(new_element->element_priority);
+            return NULL;
     }
     new_element->next=NULL;
     return new_element;
