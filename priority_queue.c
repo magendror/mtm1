@@ -183,7 +183,7 @@ PQElement pqGetFirst(PriorityQueue queue){
 }
 
 PQElement pqGetNext(PriorityQueue queue){
-    if(queue==NULL||queue->iterator==NULL){
+    if(queue==NULL||queue->iterator==NULL||queue->iterator->next==NULL){
         return NULL;
     }
     queue->iterator=queue->iterator->next;
@@ -238,14 +238,14 @@ PriorityQueueResult pqRemoveElement(PriorityQueue queue, PQElement element){
         assert(element==NULL||queue==NULL);
         return PQ_NULL_ARGUMENT;
     }
-    Element delete_elemnt_following = findElementFollowingNoPriority(queue,element);
-    if (delete_elemnt_following==NULL){
+    Element delete_element_following = findElementFollowingNoPriority(queue,element);
+    if (delete_element_following==NULL){
         return PQ_ELEMENT_DOES_NOT_EXISTS;
     }
-    Element to_be_deleted=delete_elemnt_following->next;
+    Element to_be_deleted=delete_element_following->next;
     queue->free_element(to_be_deleted->element_data);
     queue->free_priority(to_be_deleted->element_priority);
-    delete_elemnt_following->next=delete_elemnt_following->next->next;
+    delete_element_following->next=delete_element_following->next->next;
     free(to_be_deleted);
     queue->iterator=NULL;
     return PQ_SUCCESS;
