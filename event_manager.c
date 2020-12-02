@@ -10,12 +10,17 @@ typedef struct Member_t{
     struct Member_t* next;
 }*Member;
 
-struct EventManager_t{
+typedef struct Event_t{
     Date date;
+    Member member;
     int id;
     char* data;
+    struct Event_t* next; 
+
+}*Event
+struct EventManager_t{
+    Event event;
     Member member;
-    EventManager next;
 }
 
 EventManager createEventManager(Date date){
@@ -23,16 +28,14 @@ EventManager createEventManager(Date date){
     if (event_manager==NULL){
         return NULL;
     }
-    event_manager->date=date;
-    event_manager->id=0;
-    event_manager->data=NULL;
+    event_manager->event=NULL;
     event_manager->member=NULL;
-    event_manager->next=NULL;
     return event_manager;
 }
 
 void destroyEventManager(EventManager em){
-    free(em->date);
+    free(em->event->date);
+    free(em->event->member);
     free(em->member);
     free(em);
 }
