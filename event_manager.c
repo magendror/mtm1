@@ -16,8 +16,7 @@ typedef struct Event_t{
     int id;
     char* data;
     struct Event_t* next; 
-
-}*Event
+}*Event;
 struct EventManager_t{
     Event event;
     Member member;
