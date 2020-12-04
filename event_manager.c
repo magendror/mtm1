@@ -90,7 +90,7 @@ EventManagerResult emAddEventByDate(EventManager em, char* event_name, Date date
         return EM_OUT_OF_MEMORY;
     }
     new_event->date=date;
-    new_event->event_name=event_name;
+    new_event->event_name=malloc(sizeof(char)*(strlen(event_name)+1));
     new_event->event_id=event_id;
     new_event->next=NULL;
     em->iterator=em->event;
@@ -115,3 +115,28 @@ EventManagerResult emAddEventByDiff(EventManager em, char* event_name, int days,
     }
     return EM_SUCCESS;
 }
+
+EventManagerResult emChangeEventDate(EventManager em, int event_id, Date new_date){
+    if(em==NULL||event_id==NULL||new_date==NULL){
+        return EM_NULL_ARGUMENT;
+    }
+    if(dateCompare(new_date,em->current_date)<=0){
+        return EM_INVALID_DATE;
+    }
+    if(event_id<0){
+        return EM_INVALID_EVENT_ID;
+    }
+    em->iterator=em->event;
+    while(em->iterator!=NULL){
+        if (em->iterator->event_id==event_id){
+            if(dateCompare(em->iterator->date,new_date)==0){
+                return EM_EVENT_ALREADY_EXISTS;
+            }
+            em->iterator->date=new_date;
+            return EM_SUCCESS;
+        }
+    }
+    return EM_EVENT_ID_NOT_EXISTS;
+}
+
+
