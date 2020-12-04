@@ -8,14 +8,14 @@ struct Date_t{
     int year;
 };
 
-static bool is_date_legal(int day, int month){
+static bool isDateLegal(int day, int month){
     bool day_legal=(day>=1)&&(day<=30);
     bool month_legal=(month>=1)&&(month<=12);
     return (month_legal&&day_legal);
 }
 
 Date dateCreate(int day, int month, int year){
-    if(!is_date_legal(day,month)){
+    if(!isDateLegal(day,month)){
         return NULL;
     }
     Date date=malloc(sizeof(Date));
@@ -38,6 +38,7 @@ Date dateCopy(Date date){
     }
     return dateCreate(date->day,date->month,date->year);
 }
+
 bool dateGet(Date date, int* day, int* month, int* year){
     if(date==NULL||day==NULL||month==NULL||year==NULL){
         return false;
