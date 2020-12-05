@@ -179,7 +179,7 @@ PQElement pqGetFirst(PriorityQueue queue){
         return NULL;
     }
     queue->iterator=queue->first_element;
-    return queue->first_element->element_data;
+    return queue->first_element;
 }
 
 PQElement pqGetNext(PriorityQueue queue){
@@ -187,7 +187,7 @@ PQElement pqGetNext(PriorityQueue queue){
         return NULL;
     }
     queue->iterator=queue->iterator->next;
-    return queue->iterator->element_data;
+    return queue->iterator;
 }
 
 PriorityQueue pqCopy(PriorityQueue queue){

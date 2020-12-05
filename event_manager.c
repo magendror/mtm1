@@ -1,5 +1,6 @@
 #include "event_manager.h"
 #include "date.h"
+#include "priority_queue.h"
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -16,14 +17,13 @@ typedef struct Member_t{
 }*Member;
 
 typedef struct Event_t{
-    Date date;
     Member first_member;
+    Member member_iterator;
     int event_id;
     char* event_name;
-    struct Event_t* next; 
 }*Event;
 struct EventManager_t{
-    Event event; // change one of them 
+    PriorityQueue event_list;
     Event first_event;// 
     Event iterator;
     Member member_iterator;
@@ -32,21 +32,70 @@ struct EventManager_t{
     Date current_date;
 };
 
+static Event copyEvent(Event event){
+    Event new_event=malloc(sizeof(Event));
+    if(new_event==NULL){
+        return NULL;
+    }
+    Member new_member=malloc(sizeof(Member));
+    if(new_member==NULL){
+        free(new_event);
+        return NULL;
+    }
+    char* new_event_name=malloc(sizeof(char)*(strlen(event->event_name)+1));
+    if(new_event_name==NULL){
+        free(new_member);
+        free(new_event);
+        return NULL;
+    }
+    strcpy(new_event_name,event->event_name);
+    new_event->event_name=new_event_name;
+    new_event->event_id=event->event_id;
+    new_event->first_member=new_member;
+    return new_event;
+}
+
+static void freeEvent(Event event){
+    free(event->event_name);
+    event->member_iterator=event->first_member;
+    Member local_iterator;
+    while(event->member_iterator!=NULL){
+        local_iterator=event->member_iterator->next;
+        free(event->member_iterator->name);
+        free(event->member_iterator);
+        event->member_iterator=local_iterator;
+    }
+    free(event);
+}
+
+static bool equalEvent(Event event1,Event event2){
+    if(event1->event_id!=event2->event_id){
+        return false;
+    }
+    if(strcmp(event1->event_name,event2->event_name)!=0){
+        return false;
+    }
+    return true; 
+}
+
+static int dateCompareReversed(Date date1,Date date2){
+    return -1*dateCompare(date1,date2);
+}
+
 EventManager createEventManager(Date date){
     EventManager event_manager=malloc(sizeof(EventManager));
     if (event_manager==NULL){
         return NULL;
     }
-    event_manager->event=NULL;
-    event_manager->first_event=NULL;
+    event_manager->event_list=pqCreate(copyEvent,freeEvent,equalEvent,
+                                dateCopy,dateDestroy,dateCompareReversed);
     event_manager->first_member=NULL;
-    event_manager->iterator=NULL;
     event_manager->member_iterator=NULL;
     event_manager->start_date=NULL;
     event_manager->current_date=NULL;
     return event_manager;
 }
-
+/*
 static void freeEventsAll(EventManager em,Event event){
     em->member_iterator=event->first_member;
     Member local_iterator;
@@ -84,12 +133,20 @@ static void freeMemberAll(EventManager em,Member member){
         em->member_iterator=local_member_iterator;
     }
 }
+*/
 void destroyEventManager(EventManager em){
     if(em==NULL){
         return;
     }
-    freeEventsAll(em, em->first_event);
-    freeMemberAll(em,em->first_member);
+    pqDestroy(em->event_list);
+    Member local_member_iterator;
+    em->member_iterator=em->first_member;
+    while(em->member_iterator!=NULL){
+        local_member_iterator=em->member_iterator->next;
+        free(em->member_iterator->name);
+        free(em->member_iterator);
+        em->member_iterator=local_member_iterator;
+    }
     free(em);
 }
 
@@ -385,6 +442,12 @@ int emGetEventsAmount(EventManager em){
 }
 
 EventManagerResult emTick(EventManager em, int days){
+    if(em==NULL){
+        return EM_NULL_ARGUMENT;
+    }
+    if(days<0){
+        return EM_INVALID_DATE;
+    }
     for (int i=0; i<days;i++){
         dateTick(em->current_date);
     }
@@ -392,9 +455,26 @@ EventManagerResult emTick(EventManager em, int days){
         emRemoveEvent(em,em->first_event->event_id);
     }
     em->iterator=em->first_event;
-    while(em->iterator==NULL){
+    while(em->iterator!=NULL){
         if(dateCompare(em->first_event->date,em->current_date)<0){
             emRemoveEvent(em,em->iterator->event_id);
         }
     }
+    return EM_SUCCESS;
+}
+
+char* emGetNextEvent(EventManager em){
+    if(em==NULL){
+        return NULL;
+    }
+    em->iterator=em->first_event;
+    Date min_date=em->first_event->date;
+    Event next_event=em->first_event;
+    while(em->iterator!=NULL){
+        if(dateCompare(min_date,em->iterator->date)<0){
+            min_date=em->iterator->date;
+            next_event=em->iterator;
+        }
+    }
+    return next_event->event_name;
 }
