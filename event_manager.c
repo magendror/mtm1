@@ -21,6 +21,7 @@ typedef struct Event_t{
     Member member_iterator;
     int event_id;
     char* event_name;
+    Date date;
 }*Event;
 struct EventManager_t{
     PriorityQueue event_list;
@@ -48,15 +49,25 @@ static Event copyEvent(Event event){
         free(new_event);
         return NULL;
     }
+    Date new_date=malloc(sizeof(Date));
+    if(new_event_name==NULL){
+        free(new_member);
+        free(new_event);
+        free(new_event_name);
+        return NULL;
+    }
+    Date new_date=dateCopy(event->date);
     strcpy(new_event_name,event->event_name);
     new_event->event_name=new_event_name;
     new_event->event_id=event->event_id;
     new_event->first_member=new_member;
+    new_event->date=new_date;
     return new_event;
 }
 
 static void freeEvent(Event event){
     free(event->event_name);
+    dateDestroy(event->date);
     event->member_iterator=event->first_member;
     Member local_iterator;
     while(event->member_iterator!=NULL){
@@ -167,17 +178,15 @@ EventManagerResult validDataCheck(EventManager em, char* event_name, Date date, 
     }
     //
     //name&check check
-    em->iterator=em->event;
-    while(em->iterator!=NULL){
-        if((dateCompare(em->iterator->date,date)==0)&&(strcmp(em->iterator->event_name,event_name)==0)){
+    PQ_FOREACH(Event,current_event,em->event_list){
+        if((dateCompare(current_event->date,date)==0)&&(strcmp(current_event->event_name,event_name)==0)){
             EM_EVENT_ALREADY_EXISTS;
         }
     }
     //
     //id not taken check
-    em->iterator=em->event;
-    while(em->iterator!=NULL){
-        if(em->iterator->event_id==event_id){
+    PQ_FOREACH(Event,current_event,em->event_list){
+        if(current_event->event_id==event_id){
             return EM_EVENT_ID_ALREADY_EXISTS;
         }
     }
@@ -195,20 +204,15 @@ EventManagerResult emAddEventByDate(EventManager em, char* event_name, Date date
     if (new_event==NULL){
         return EM_OUT_OF_MEMORY;
     }
-    Date new_date=dateCopy(date);
-    new_event->date=new_date;
-    char* new_event_name=malloc(sizeof(char)*(strlen(event_name)+1));
-    strcpy(new_event_name,event_name);
-    new_event->event_name=new_event_name;
+    new_event->date=date;
     new_event->event_id=event_id;
-    new_event->next=NULL;
-    em->iterator=em->event;
-    if(em->event!=NULL){
-        while(em->iterator->next!=NULL){
-            em->iterator=em->iterator->next;
-        }
+    new_event->event_name=event_name;
+    if(pqInsert(em->event_list,new_event,date)==PQ_OUT_OF_MEMORY){
+        free(new_event);
+        destroyEventManager(em);
+        exit;
     }
-    em->iterator->next=new_event;
+    free(new_event);
     return EM_SUCCESS;
 }
 
@@ -235,18 +239,13 @@ EventManagerResult emChangeEventDate(EventManager em, int event_id, Date new_dat
     if(event_id<0){
         return EM_INVALID_EVENT_ID;
     }
-    em->iterator=em->event;
-    while(em->iterator!=NULL){
-        if (em->iterator->event_id==event_id){
-            if(dateCompare(em->iterator->date,new_date)==0){
-                return EM_EVENT_ALREADY_EXISTS;
-            }
-            Date new_date_copy = dateCopy(new_date);
-            dateDestroy(em->iterator->date);
-            em->iterator->date=new_date_copy;
+    PQ_FOREACH(Event,current_event,em->event_list){
+        if (current_event->event_id==event_id){
+            current_event->date=new_date;
+            pqChangePriority(em->event_list,current_event,current_event->date,new_date);
             return EM_SUCCESS;
+            }
         }
-    }
     return EM_EVENT_ID_NOT_EXISTS;
 }
 
@@ -451,15 +450,9 @@ EventManagerResult emTick(EventManager em, int days){
     for (int i=0; i<days;i++){
         dateTick(em->current_date);
     }
-    while((dateCompare(em->first_event->date,em->current_date)<0)&&(em->first_event!=NULL)){
-        emRemoveEvent(em,em->first_event->event_id);
-    }
-    em->iterator=em->first_event;
-    while(em->iterator!=NULL){
-        if(dateCompare(em->first_event->date,em->current_date)<0){
-            emRemoveEvent(em,em->iterator->event_id);
+    while((dateCompare((Event)pqGetFirst(em->event_list),em->current_date)<0)&&(pqGetSize(em->event_list)>0)){
+            pqRemove(em->event_list);
         }
-    }
     return EM_SUCCESS;
 }
 
