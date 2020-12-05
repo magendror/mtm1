@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+
 #define EM_IS_NULL -1
+
 typedef struct Member_t{
     int id;
     char* name;
@@ -136,8 +138,11 @@ EventManagerResult emAddEventByDate(EventManager em, char* event_name, Date date
     if (new_event==NULL){
         return EM_OUT_OF_MEMORY;
     }
-    new_event->date=date;
-    new_event->event_name=malloc(sizeof(char)*(strlen(event_name)+1));
+    Date new_date=dateCopy(date);
+    new_event->date=new_date;
+    char* new_event_name=malloc(sizeof(char)*(strlen(event_name)+1));
+    strcpy(new_event_name,event_name);
+    new_event->event_name=new_event_name;
     new_event->event_id=event_id;
     new_event->next=NULL;
     em->iterator=em->event;
@@ -179,7 +184,9 @@ EventManagerResult emChangeEventDate(EventManager em, int event_id, Date new_dat
             if(dateCompare(em->iterator->date,new_date)==0){
                 return EM_EVENT_ALREADY_EXISTS;
             }
-            em->iterator->date=new_date;
+            Date new_date_copy = dateCopy(new_date);
+            dateDestroy(em->iterator->date);
+            em->iterator->date=new_date_copy;
             return EM_SUCCESS;
         }
     }
@@ -377,3 +384,17 @@ int emGetEventsAmount(EventManager em){
     return events_amount;
 }
 
+EventManagerResult emTick(EventManager em, int days){
+    for (int i=0; i<days;i++){
+        dateTick(em->current_date);
+    }
+    while((dateCompare(em->first_event->date,em->current_date)<0)&&(em->first_event!=NULL)){
+        emRemoveEvent(em,em->first_event->event_id);
+    }
+    em->iterator=em->first_event;
+    while(em->iterator==NULL){
+        if(dateCompare(em->first_event->date,em->current_date)<0){
+            emRemoveEvent(em,em->iterator->event_id);
+        }
+    }
+}
