@@ -2,6 +2,7 @@
 #include "../priority_queue.h"
 #include <stdlib.h>
 
+
 #define NUMBER_TESTS 4
 
 static PQElementPriority copyIntGeneric(PQElementPriority n) {
@@ -123,6 +124,7 @@ int main(int argc, char *argv[]) {
     }
     PQ_FOREACH(int*,iterator,pq){
         printf("%d",*iterator);
-    }  
+    }
+    pqDestroy(pq);  
     return 0;
 }

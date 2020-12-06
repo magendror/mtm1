@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+C:/Technion/SimesterC/Intro to System Programing/Ex1/mtm1/dry.c
+stdlib.h
+-
+string.h
+C:/Technion/SimesterC/Intro to System Programing/Ex1/mtm1/string.h
+assert.h
+C:/Technion/SimesterC/Intro to System Programing/Ex1/mtm1/assert.h
+stdio.h
+C:/Technion/SimesterC/Intro to System Programing/Ex1/mtm1/stdio.h
+

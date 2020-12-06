@@ -9,10 +9,12 @@
 
 #define EM_IS_NULL -1
 
+//!!! Turn into pq inwhich the data is member ang the priority is number !!!
+
 typedef struct Member_t{
     int id;
     char* name;
-    struct Event_t* member_first_event;
+    int num_of_events;
     struct Member_t* next;
 }*Member;
 
@@ -50,6 +52,13 @@ static Event copyEvent(Event event){
         return NULL;
     }
     Date new_date=malloc(sizeof(Date));
+    if(new_event_name==NULL){
+        free(new_member);
+        free(new_event);
+        free(new_event_name);
+        return NULL;
+    }
+    Member new_member=malloc(sizeof(Member));
     if(new_event_name==NULL){
         free(new_member);
         free(new_event);
@@ -207,6 +216,8 @@ EventManagerResult emAddEventByDate(EventManager em, char* event_name, Date date
     new_event->date=date;
     new_event->event_id=event_id;
     new_event->event_name=event_name;
+    new_event->first_member=NULL;
+    new_event->member_iterator=NULL;
     if(pqInsert(em->event_list,new_event,date)==PQ_OUT_OF_MEMORY){
         free(new_event);
         destroyEventManager(em);
@@ -226,6 +237,7 @@ EventManagerResult emAddEventByDiff(EventManager em, char* event_name, int days,
         dateDestroy(new_date);
         return result;
     }
+    dateDestroy(new_date);
     return EM_SUCCESS;
 }
 
@@ -450,7 +462,7 @@ EventManagerResult emTick(EventManager em, int days){
     for (int i=0; i<days;i++){
         dateTick(em->current_date);
     }
-    while((dateCompare((Event)pqGetFirst(em->event_list),em->current_date)<0)&&(pqGetSize(em->event_list)>0)){
+    while((dateCompare(((Event)pqGetFirst(em->event_list))->date,em->current_date)<0)&&(pqGetSize(em->event_list)>0)){
             pqRemove(em->event_list);
         }
     return EM_SUCCESS;
@@ -460,14 +472,6 @@ char* emGetNextEvent(EventManager em){
     if(em==NULL){
         return NULL;
     }
-    em->iterator=em->first_event;
-    Date min_date=em->first_event->date;
-    Event next_event=em->first_event;
-    while(em->iterator!=NULL){
-        if(dateCompare(min_date,em->iterator->date)<0){
-            min_date=em->iterator->date;
-            next_event=em->iterator;
-        }
-    }
-    return next_event->event_name;
+    return ((Event)pqGetFirst(em->event_list))->event_name;
 }
+

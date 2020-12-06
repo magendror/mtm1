@@ -63,8 +63,6 @@ PriorityQueue pqCreate(CopyPQElement copy_element,
     return queue;
 }
 
-
-
 void pqDestroy(PriorityQueue queue){  
     pqClear(queue);
     free(queue);
@@ -73,6 +71,9 @@ void pqDestroy(PriorityQueue queue){
 int pqGetSize(PriorityQueue queue){
     if(!queue){
         return INPUT_IS_NULL;
+    }
+    if(queue->first_element==NULL){
+        return 0;
     }
     int pq_size=0;
     ELEMENT_FOR(queue){
@@ -83,7 +84,7 @@ int pqGetSize(PriorityQueue queue){
 }
 
 static Element elementCreate(PriorityQueue queue,PQElement element, PQElementPriority priority){
-    Element new_element=malloc(sizeof(*new_element));
+    Element new_element=malloc(sizeof(Element));
     if(!new_element){
         return NULL;
     }
@@ -179,6 +180,9 @@ PQElement pqGetFirst(PriorityQueue queue){
         return NULL;
     }
     queue->iterator=queue->first_element;
+    if(queue->first_element==NULL){
+        return NULL;
+    }
     return queue->first_element->element_data;
 }
 
@@ -279,7 +283,7 @@ PriorityQueueResult pqClear(PriorityQueue queue){
         return PQ_NULL_ARGUMENT;
     }
     queue->iterator=queue->first_element;
-    while(queue->iterator==NULL){
+    while(queue->iterator!=NULL){
         Element to_delete = queue->iterator;
         queue->iterator=queue->iterator->next;
         queue->free_priority(to_delete->element_priority);

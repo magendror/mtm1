@@ -1,0 +1,3 @@
+"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\pq_tests1.dir/objects.a
+C:\TDM-GCC-64\bin\ar.exe cr CMakeFiles\pq_tests1.dir/objects.a @CMakeFiles\pq_tests1.dir\objects1.rsp
+C:\TDM-GCC-64\bin\x86_64-w64-mingw32-gcc.exe -std=c99 --pedantic-errors -Wall -Werror -L. -lpriority_queue -g -Wl,--whole-archive CMakeFiles\pq_tests1.dir/objects.a -Wl,--no-whole-archive -o pq_tests1.exe -Wl,--out-implib,libpq_tests1.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\pq_tests1.dir\linklibs.rsp
