@@ -475,3 +475,20 @@ char* emGetNextEvent(EventManager em){
     return ((Event)pqGetFirst(em->event_list))->event_name;
 }
 
+void emPrintAllEvents(EventManager em, const char* file_name){
+    FILE* write_to_file=fopen(file_name,"w");
+    if(write_to_file==NULL){
+        return;
+    }
+    PQ_FOREACH(Event,current_event,em->event_list){
+        int day,month,year;
+        dateGet(current_event->date,&day,&month,&year);
+        fprintf("%s,%d.%d.%d",current_event->event_name,day,month,year);
+        current_event->member_iterator=current_event->first_member;
+        while (current_event->member_iterator!=NULL){
+            fprintf(",%s",current_event->member_iterator->name);
+        }
+        fprintf("\n",current_event->member_iterator->name);
+    }
+    fclose(write_to_file);
+}
