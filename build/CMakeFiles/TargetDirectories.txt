@@ -1,3 +1,0 @@
-C:/Technion/SimesterC/Intro to System Programing/Ex1/mtm1/build/CMakeFiles/pq_tests1.dir
-C:/Technion/SimesterC/Intro to System Programing/Ex1/mtm1/build/CMakeFiles/edit_cache.dir
-C:/Technion/SimesterC/Intro to System Programing/Ex1/mtm1/build/CMakeFiles/rebuild_cache.dir

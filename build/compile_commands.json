@@ -1,7 +1,0 @@
-[
-{
-  "directory": "C:/Technion/SimesterC/Intro to System Programing/Ex1/mtm1/build",
-  "command": "C:\\TDM-GCC-64\\bin\\x86_64-w64-mingw32-gcc.exe   -std=c99 --pedantic-errors -Wall -Werror -L. -lpriority_queue -g -o CMakeFiles\\pq_tests1.dir\\pq_tests1.c.obj -c \"C:\\Technion\\SimesterC\\Intro to System Programing\\Ex1\\mtm1\\pq_tests1.c\"",
-  "file": "C:/Technion/SimesterC/Intro to System Programing/Ex1/mtm1/pq_tests1.c"
-}
-]
