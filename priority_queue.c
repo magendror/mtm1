@@ -235,7 +235,6 @@ static Element findElementFollowingNoPriority(PriorityQueue queue, PQElement ele
             return queue->iterator;
         }   
     }
-    //should not reach here
     return NULL;
 }
 
@@ -284,13 +283,14 @@ PriorityQueueResult pqClear(PriorityQueue queue){
     if(queue==NULL){
         return PQ_NULL_ARGUMENT;
     }
+
     queue->iterator=queue->first_element;
     while(queue->iterator!=NULL){
         Element to_delete = queue->iterator;
         queue->iterator=queue->iterator->next;
         queue->free_priority(to_delete->element_priority);
         queue->free_element(to_delete->element_data);
-        free(queue->iterator);
+        free(to_delete);
     }
     return PQ_SUCCESS;
 }
