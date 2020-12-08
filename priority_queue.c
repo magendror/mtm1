@@ -48,7 +48,7 @@ PriorityQueue pqCreate(CopyPQElement copy_element,
     if(!pqFuncValid(copy_element,free_element,equal_elements,copy_priority,free_priority,compare_priorities)){
         return NULL;
     }
-    PriorityQueue queue=malloc(sizeof(PriorityQueue));
+    PriorityQueue queue=malloc(sizeof(PriorityQueue*));
     if (queue==NULL){
         return NULL;
     }
@@ -84,7 +84,7 @@ int pqGetSize(PriorityQueue queue){
 }
 
 static Element elementCreate(PriorityQueue queue,PQElement element, PQElementPriority priority){
-    Element new_element=malloc(sizeof(Element));
+    Element new_element=malloc(sizeof(Element*));
     if(!new_element){
         return NULL;
     }
