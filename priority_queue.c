@@ -48,7 +48,7 @@ PriorityQueue pqCreate(CopyPQElement copy_element,
     if(!pqFuncValid(copy_element,free_element,equal_elements,copy_priority,free_priority,compare_priorities)){
         return NULL;
     }
-    PriorityQueue queue=malloc(sizeof(PriorityQueue*));
+    PriorityQueue queue=malloc(sizeof(struct PriorityQueue_t));
     if (queue==NULL){
         return NULL;
     }
@@ -84,7 +84,7 @@ int pqGetSize(PriorityQueue queue){
 }
 
 static Element elementCreate(PriorityQueue queue,PQElement element, PQElementPriority priority){
-    Element new_element=malloc(sizeof(Element*));
+    Element new_element=malloc(sizeof(struct element_struct));
     if(!new_element){
         return NULL;
     }
@@ -106,7 +106,7 @@ PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPr
         return PQ_NULL_ARGUMENT;
     }
     Element new_element=elementCreate(queue,element,priority);
-        if(queue->first_element==NULL){
+        if(new_element==NULL){
             return PQ_OUT_OF_MEMORY;
         }
     if(pqGetSize(queue)==0){
@@ -125,7 +125,7 @@ PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPr
     }
     Element last_iterator=NULL;
     ELEMENT_FOR(queue){
-        if(queue->compare_priorities(new_element->element_priority,queue->iterator->element_priority)<0){
+        if(queue->compare_priorities(new_element->element_priority,queue->iterator->element_priority)>0){
             new_element->next=queue->iterator;
             last_iterator->next=new_element;
             queue->iterator=NULL;
@@ -133,8 +133,10 @@ PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPr
         }
         last_iterator=queue->iterator;
     }
-    //should not reach here
-    return PQ_NULL_ARGUMENT;
+    last_iterator->next=new_element;
+    new_element->next=NULL;
+    queue->iterator=NULL;
+    return PQ_SUCCESS;
 }
 
 static Element findElementFollowing(PriorityQueue queue, PQElement element, PQElementPriority priority){
