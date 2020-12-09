@@ -213,6 +213,9 @@ PriorityQueueResult pqRemove(PriorityQueue queue){
     if(queue==NULL){
         return PQ_NULL_ARGUMENT;
     }
+    if (queue->first_element==NULL){
+        return PQ_SUCCESS;
+    }
     queue->iterator=queue->first_element->next;
     queue->free_element(queue->first_element->element_data);
     queue->free_priority(queue->first_element->element_priority);
@@ -291,5 +294,6 @@ PriorityQueueResult pqClear(PriorityQueue queue){
         queue->free_element(to_delete->element_data);
         free(to_delete);
     }
+    queue->first_element=NULL;
     return PQ_SUCCESS;
 }
