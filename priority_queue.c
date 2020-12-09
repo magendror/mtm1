@@ -75,11 +75,12 @@ int pqGetSize(PriorityQueue queue){
     if(queue->first_element==NULL){
         return 0;
     }
+    Element present_iterator=queue->iterator;
     int pq_size=0;
     ELEMENT_FOR(queue){
         pq_size=pq_size+1;
     }
-    queue->iterator=NULL;
+    queue->iterator=present_iterator;
     return pq_size;
 }
 
@@ -140,8 +141,8 @@ PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPr
 }
 
 static Element findElementFollowing(PriorityQueue queue, PQElement element, PQElementPriority priority){
-    if((queue->equal_elements(element,queue->first_element->element_data)&&
-            (queue->first_element->element_priority==priority))){
+    if((queue->equal_elements(element,queue->first_element->element_data))&&
+    (queue->compare_priorities(queue->first_element->element_priority,priority)==0)){
                 return queue->first_element;
             }
     ELEMENT_FOR(queue){
@@ -149,7 +150,7 @@ static Element findElementFollowing(PriorityQueue queue, PQElement element, PQEl
             return NULL;
         }
         else if((queue->equal_elements(element,queue->iterator->next->element_data)&&
-            (queue->iterator->next->element_priority==priority))){
+            (queue->compare_priorities(queue->iterator->next->element_priority,priority)==0))){
             return queue->iterator;
         }   
     }
@@ -174,8 +175,6 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element, PQE
     queue->iterator=NULL;
     return PQ_SUCCESS;
 }
-
-
 
 PQElement pqGetFirst(PriorityQueue queue){
     if(!queue){

@@ -8,12 +8,12 @@
 #include <string.h>
 
 #define EM_IS_NULL -1
-
-//!!! Turn into pq inwhich the data is member ang the priority is number !!!
+#define EVENT_LIST_IS_EMPTY 0
 
 typedef struct Member_t{
     int id;
     char* name;
+    PQElementPriority priority;
     int num_of_events;
     struct Member_t* next;
 }*Member;
@@ -27,10 +27,9 @@ typedef struct Event_t{
 }*Event;
 struct EventManager_t{
     PriorityQueue event_list;
-    Event first_event;// 
-    Event iterator;
+    PriorityQueue member_list;
     Member member_iterator;
-    Member first_member;
+    Event iterator;
     Date start_date;
     Date current_date;
 };
@@ -102,6 +101,53 @@ static int dateCompareReversed(Date date1,Date date2){
     return -1*dateCompare(date1,date2);
 }
 
+void destroyEventManager(EventManager em){
+    pqDestroy(em->event_list);
+    pqDestroy(em->member_list);
+    free(em);
+}
+
+static PQElement copy_member(Member member){
+    Member new_member=malloc(sizeof(Member));
+    if(new_member==NULL){
+        return NULL;
+    }
+    new_member->name=malloc(sizeof(char)*(strlen(member->name)+1));
+    if(new_member->name==NULL){
+        free(new_member);
+        return NULL;
+    }
+    new_member=member;
+    assert(member->name==new_member->name);
+    return new_member;
+}
+
+static void free_member(Member member){
+    free(member->name);
+    free(member);
+}
+
+static bool equal_member(Member member1,Member member2){
+    bool equal_id=(member1->id==member2->id);
+    bool equal_name=(strcmp(member1->name,member2->name)==0);
+    return ((equal_id)&&(equal_name));
+}
+
+static int copyMemberNumOfEvents(Member member){
+    return member->num_of_events;
+}
+
+static void freeMemberNumOfEvents(Member member){
+    member->num_of_events=0;
+}
+
+static int compareMemberNumOfEvents(Member member1,Member member2){
+    if(member1->num_of_events==member2->num_of_events){
+       return member2->id-member1->id;
+   }
+   return member1->num_of_events-member2->num_of_events;
+}
+
 EventManager createEventManager(Date date){
     EventManager event_manager=malloc(sizeof(EventManager));
     if (event_manager==NULL){
@@ -109,65 +155,12 @@ EventManager createEventManager(Date date){
     }
     event_manager->event_list=pqCreate(copyEvent,freeEvent,equalEvent,
                                 dateCopy,dateDestroy,dateCompareReversed);
-    event_manager->first_member=NULL;
+    event_manager->member_list=pqCreate(copy_member,free_member,equal_member,copyMemberNumOfEvents,freeMemberNumOfEvents,compareMemberNumOfEvents);
     event_manager->member_iterator=NULL;
     event_manager->start_date=NULL;
     event_manager->current_date=NULL;
+    event_manager->iterator=NULL;
     return event_manager;
-}
-/*
-static void freeEventsAll(EventManager em,Event event){
-    em->member_iterator=event->first_member;
-    Member local_iterator;
-    while(em->member_iterator!=NULL){
-        local_iterator=em->member_iterator->next;
-        free(em->member_iterator->name);
-        free(em->member_iterator);
-        em->member_iterator=local_iterator;
-    }
-    Event local_event_iterator;
-    em->iterator=em->first_event;
-    while(em->iterator!=NULL){
-        local_event_iterator=em->iterator->next;
-        free(em->iterator->event_name);
-        free(em->iterator);
-        em->iterator=local_event_iterator;
-    }
-}
-
-static void freeMemberAll(EventManager em,Member member){
-    em->iterator=member->member_first_event;
-    Event local_iterator;
-    while(em->iterator!=NULL){
-        local_iterator=em->iterator->next;
-        free(em->iterator->event_name);
-        free(em->iterator);
-        em->iterator=local_iterator;
-    }
-    Member local_member_iterator;
-    em->member_iterator=em->first_member;
-    while(em->member_iterator!=NULL){
-        local_member_iterator=em->member_iterator->next;
-        free(em->member_iterator->name);
-        free(em->member_iterator);
-        em->member_iterator=local_member_iterator;
-    }
-}
-*/
-void destroyEventManager(EventManager em){
-    if(em==NULL){
-        return;
-    }
-    pqDestroy(em->event_list);
-    Member local_member_iterator;
-    em->member_iterator=em->first_member;
-    while(em->member_iterator!=NULL){
-        local_member_iterator=em->member_iterator->next;
-        free(em->member_iterator->name);
-        free(em->member_iterator);
-        em->member_iterator=local_member_iterator;
-    }
-    free(em);
 }
 
 EventManagerResult validDataCheck(EventManager em, char* event_name, Date date, int event_id){
@@ -202,7 +195,6 @@ EventManagerResult validDataCheck(EventManager em, char* event_name, Date date, 
     //
     return EM_SUCCESS;
 }
-
 
 EventManagerResult emAddEventByDate(EventManager em, char* event_name, Date date, int event_id){
     EventManagerResult result = validDataCheck(em,event_name,date,event_id);
@@ -241,6 +233,39 @@ EventManagerResult emAddEventByDiff(EventManager em, char* event_name, int days,
     return EM_SUCCESS;
 }
 
+static Event findEvent(EventManager em,int event_id){
+    PQ_FOREACH(Event,event,em->event_list){
+        if(event->event_id==event_id){
+            return event;
+        }
+    }
+    return NULL;
+}
+
+static Member findMember(EventManager em,int member_id){
+    PQ_FOREACH(Member,member,em->member_list){
+        if(member->id==member_id){
+            return member;
+        }
+    }
+    return NULL;
+}
+
+EventManagerResult emRemoveEvent(EventManager em, int event_id){
+    if(em==NULL){
+        return EM_NULL_ARGUMENT;
+    }
+    if(event_id<0){
+        return EM_INVALID_EVENT_ID;
+    }
+    Event event=findEvent(em,event_id);
+    if(event==NULL){
+        return EM_EVENT_NOT_EXISTS;
+    }
+    pqRemoveElement(em->event_list,event);
+    return EM_SUCCESS;
+}
+
 EventManagerResult emChangeEventDate(EventManager em, int event_id, Date new_date){
     if(em==NULL||new_date==NULL){
         return EM_NULL_ARGUMENT;
@@ -261,22 +286,6 @@ EventManagerResult emChangeEventDate(EventManager em, int event_id, Date new_dat
     return EM_EVENT_ID_NOT_EXISTS;
 }
 
-static Member creatNewMember(char* member_name, int member_id){
-    Member new_member=malloc(sizeof(Member));
-    if(new_member==NULL){
-        return NULL;
-    }
-    new_member->name=malloc(sizeof(char)*(strlen(member_name)+1));
-    if(new_member->name==NULL){
-        return NULL;
-    }
-    new_member->name=member_name;
-    new_member->id=member_id;
-    new_member->member_first_event=NULL;
-    new_member->next=NULL;
-    return new_member;
-}
-
 EventManagerResult emAddMember(EventManager em, char* member_name, int member_id){
     if(em==NULL||member_name==NULL){
         return EM_NULL_ARGUMENT;
@@ -284,88 +293,74 @@ EventManagerResult emAddMember(EventManager em, char* member_name, int member_id
     if(member_id<0){
         return EM_INVALID_MEMBER_ID;
     }
-    Member new_member=creatNewMember(member_name,member_id);
+    Member new_member=malloc(sizeof(Member));
     if(new_member==NULL){
         return EM_OUT_OF_MEMORY;
     }
-    if(em->first_member==NULL){
-        em->first_member=new_member;
+    new_member->name=malloc(sizeof(char)*(strlen(member_name)+1));
+    if(new_member->name==NULL){
+        free(new_member);
+        return EM_OUT_OF_MEMORY;
     }
-    em->member_iterator=em->first_member;
-    while(em->member_iterator){
-        if(member_id==em->member_iterator->id){
-            free(new_member);
-            return EM_MEMBER_ID_ALREADY_EXISTS;
-        }
-        em->member_iterator=em->member_iterator->next;
+    new_member->name=member_name;
+    new_member->id=member_id;
+    new_member->num_of_events=0;
+    new_member->priority=&(new_member->num_of_events);
+    PriorityQueueResult insert_result=pqInsert(em->member_list,new_member,new_member->priority);
+    if(insert_result==PQ_OUT_OF_MEMORY){
+        free(new_member->name);
+        free(new_member);
+        return EM_OUT_OF_MEMORY;
     }
-    new_member->next=em->first_member;
-    em->first_member=new_member;
     return EM_SUCCESS;
 }
 
-
-static Member findMember(EventManager em, int member_id){
-    em->member_iterator=em->first_member;
-    while(em->member_iterator){
-        if(em->member_iterator->id==member_id){
-            return em->member_iterator;
-        }
-        em->member_iterator=em->member_iterator->next;
-    }
-    return NULL;
-}
-
-static Event findEvent(EventManager em, int event_id){
-    em->iterator=em->first_event;
-    while(em->iterator){
-        if(em->iterator->event_id==event_id){
-            return em->iterator;
-        }
-        em->iterator=em->iterator->next;
-    }
-    return NULL;
-}
-
-static bool connectEventToMember(Event event,Member member){
-    Member new_member=malloc(sizeof(Member));
-    if(new_member==NULL){
-       return false;
-    }
-    new_member->name=malloc(sizeof(char)*(strlen(member->name)+1));
-    if(new_member->name==NULL){
-        return NULL;
-    }
-    new_member=member;
-    new_member->next=event->first_member;
-    event->first_member=new_member;
-    return true;
-}
-
-static bool connectMemberToEvent(Member member,Event event){
-    Event new_event=malloc(sizeof(Event));
-    if(new_event==NULL){
-       return false;
-    }
-    new_event->event_name=malloc(sizeof(char)*(strlen(event->event_name)+1));
-    if(new_event->event_name==NULL){
-        return false;
-    }
-    new_event=event;
-    new_event->next=member->member_first_event;
-    member->member_first_event=new_event;
-    return true;
-}
-
-static bool memberDuplication(EventManager em,int member_id,Event event){
-    em->member_iterator=event->first_member;
-    while(em->member_iterator){
-        if(em->member_iterator->id==member_id){
-            return true;
+static bool memberAndEventAlreadyLinked(EventManager em,int member_id, int event_id){
+    PQ_FOREACH(Event,event,em->event_list){
+        if(event->event_id==event_id){
+            event->member_iterator=event->first_member;
+            while(event->member_iterator){
+                if(event->member_iterator->id==member_id){
+                    return true;
+                }
+            }  
         }
     }
     return false;
 }
+
+static void connectMemberToEvent(EventManager em, Member member, int event_id){
+     PQ_FOREACH(Event,event,em->event_list){
+         if(event->event_id==event_id){
+            Member last_iterator=NULL;
+            event->member_iterator=event->first_member;
+            while(event->member_iterator!=NULL){
+                if(member->id<event->member_iterator->id){
+                    if(last_iterator==NULL){ //member should be first
+                        member->next=event->member_iterator;
+                        event->first_member=member;
+                        return;
+                    }
+                    member->next=event->member_iterator;
+                    last_iterator->next=member;
+                    return;
+                }
+                last_iterator=event->member_iterator;
+                event->member_iterator=event->member_iterator->next;
+            }
+            last_iterator->next=member;
+         }
+     }
+}
+
+static void connectEventToMember(EventManager em, Member member){
+    PQElementPriority old_priority=&(member->num_of_events);
+    member->num_of_events++;
+    int new_priority=member->num_of_events;
+    PQElementPriority p_new_priority=&new_priority;
+    pqChangePriority(em->member_list,member,old_priority,p_new_priority);
+}
+
 EventManagerResult emAddMemberToEvent(EventManager em, int member_id, int event_id){
     if(em==NULL){
         return EM_NULL_ARGUMENT;
@@ -384,39 +379,44 @@ EventManagerResult emAddMemberToEvent(EventManager em, int member_id, int event_
     if(member==NULL){
         return EM_MEMBER_ID_NOT_EXISTS;
     }
-    if(memberDuplication(em,member_id,event)){
+    if(memberAndEventAlreadyLinked(em,member->id,event_id)){
         return EM_EVENT_AND_MEMBER_ALREADY_LINKED;
     }
-    if(!connectEventToMember(event,member)){
-        return EM_OUT_OF_MEMORY;
-    }
-    if(!connectMemberToEvent(member,event)){
-        return EM_OUT_OF_MEMORY;
-    }
+    connectMemberToEvent(em,member,event_id);
+    connectEventToMember(em,member);
     return EM_SUCCESS;
 }
 
-static bool removeMemberFromEvent(EventManager em,Event event,int member_id){
-    em->member_iterator=event->first_member;
-    Member last_member=NULL;
-    while(em->member_iterator){
-        if(em->member_iterator->id==member_id){
-            if(last_member==NULL){
-                event->first_member=em->member_iterator->next;
+static void disConnectMemberToEvent(EventManager em, Member member, int event_id){
+     PQ_FOREACH(Event,event,em->event_list){
+         if(event->event_id==event_id){
+            Member last_iterator=NULL;
+            while(event->member_iterator!=NULL){
+                if(member->id==event->member_iterator->id){
+                    if(last_iterator==NULL){ //member is the first
+                        event->first_member=member->next;
+                        return;
+                    }
+                    last_iterator->next=member->next;
+                    return;
+                }
+                last_iterator=event->member_iterator;
+                event->member_iterator=event->member_iterator->next;
             }
-            else{
-                last_member->next=em->member_iterator->next;
-            }
-            free(em->member_iterator);
-                return true;
-
-        }
-        em->member_iterator=em->member_iterator->next;
-    }
-    return false;
+         }
+     }
 }
+
+static void disConnectEventToMember(EventManager em, Member member){
+    PQElementPriority old_priority=&(member->num_of_events);
+    member->num_of_events--;
+    int new_priority=member->num_of_events;
+    PQElementPriority p_new_priority=&new_priority;
+    pqChangePriority(em->member_list,member,old_priority,p_new_priority);
+}
+
 EventManagerResult emRemoveMemberFromEvent (EventManager em, int member_id, int event_id){
-    if(em==NULL){
+   if(em==NULL){
         return EM_NULL_ARGUMENT;
     }
     if(event_id<0){
@@ -425,20 +425,22 @@ EventManagerResult emRemoveMemberFromEvent (EventManager em, int member_id, int 
     if(member_id<0){
         return EM_INVALID_MEMBER_ID;
     }
-    Event event=findEvent(em,event_id);
-    if(event==NULL){
+
+    if(!findEvent(em,event_id)){
         return EM_EVENT_ID_NOT_EXISTS;
     }
     Member member=findMember(em,member_id);
     if(member==NULL){
         return EM_MEMBER_ID_NOT_EXISTS;
     }
-    if(removeMemberFromEvent(em,event,member_id)){
-        return EM_SUCCESS;
+    if(!memberAndEventAlreadyLinked(em,member->id,event_id)){
+        return EM_EVENT_AND_MEMBER_NOT_LINKED;
     }
-    return EM_EVENT_AND_MEMBER_NOT_LINKED;
-}
+    disConnectMemberToEvent(em,member,event_id);
+    disConnectEventToMember(em,member);
+    return EM_SUCCESS;
 
+}
 int emGetEventsAmount(EventManager em){
     if(em==NULL){
         return EM_IS_NULL;
@@ -468,6 +470,16 @@ EventManagerResult emTick(EventManager em, int days){
     return EM_SUCCESS;
 }
 
+int emGetEventsAmount(EventManager em){
+    if(em==NULL){
+        return EM_IS_NULL;
+    }
+    if(em->event_list==NULL){
+        return EVENT_LIST_IS_EMPTY;
+    }
+    return pqGetSize(em->event_list);
+}
+
 char* emGetNextEvent(EventManager em){
     if(em==NULL){
         return NULL;
@@ -489,6 +501,20 @@ void emPrintAllEvents(EventManager em, const char* file_name){
             fprintf(",%s",current_event->member_iterator->name);
         }
         fprintf("\n",current_event->member_iterator->name);
+    }
+    fclose(write_to_file);
+}
+
+void emPrintAllResponsibleMembers(EventManager em, const char* file_name){
+    FILE* write_to_file=fopen(file_name,"w");
+    if(write_to_file==NULL){
+        return;
+    }
+    PQ_FOREACH(Membert,current_member,em->member_list){
+        if(current_member->num_of_events==0){
+            return;
+        }
+        fprintf("%s,\n",current_member->name,current_member->num_of_events);
     }
     fclose(write_to_file);
 }
