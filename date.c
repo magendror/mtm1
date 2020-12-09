@@ -14,11 +14,11 @@ static bool isDateLegal(int day, int month){
     return (month_legal&&day_legal);
 }
 
-Date dateCreate(int day, int month, int year){
+Date dateCreate(int day, int month, int year){ 
     if(!isDateLegal(day,month)){
         return NULL;
     }
-    Date date=malloc(sizeof(Date));
+    Date date=malloc(sizeof(struct Date_t));
     if(date==NULL){
         return NULL;
     }
@@ -50,6 +50,9 @@ bool dateGet(Date date, int* day, int* month, int* year){
 }
 
 int dateCompare(Date date1, Date date2){
+    if(date1==NULL||date2==NULL){
+        return 0;
+    }
     if (date1->year<date2->year){
         return -1;
     }
@@ -60,6 +63,7 @@ int dateCompare(Date date1, Date date2){
         if (date1->month<date2->month){
             return -1;
         }
+        
         else if (date1->month>date2->month){
             return 1;
         }
