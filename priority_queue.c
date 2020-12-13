@@ -249,6 +249,15 @@ PriorityQueueResult pqRemoveElement(PriorityQueue queue, PQElement element){
     if (delete_element_following==NULL){
         return PQ_ELEMENT_DOES_NOT_EXISTS;
     }
+    if(queue->equal_elements(element,delete_element_following->element_data)){
+        assert(queue->equal_elements(queue->first_element->element_data,element));
+        queue->first_element=queue->first_element->next;
+        queue->free_element(delete_element_following->element_data);
+        queue->free_priority(delete_element_following->element_priority);
+        free(delete_element_following);
+        queue->iterator=NULL;
+        return PQ_SUCCESS;
+    }
     Element to_be_deleted=delete_element_following->next;
     queue->free_element(to_be_deleted->element_data);
     queue->free_priority(to_be_deleted->element_priority);
