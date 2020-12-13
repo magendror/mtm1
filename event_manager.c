@@ -37,12 +37,13 @@ static PQElement copy_member(PQElement member){
     if(new_member==NULL){
         return NULL;
     }
-    new_member->name=malloc(sizeof(char)*(strlen(((Member)member)->name)+1));
-    if(new_member->name==NULL){
+    char* name=malloc(sizeof(char)*(strlen(((Member)member)->name)+1));
+    if(name==NULL){
         free(new_member);
         return NULL;
     }
-    strcpy(new_member->name,((Member)member)->name);
+    strcpy(name,((Member)member)->name);
+    new_member->name=name;
     new_member->num_of_events=((Member)member)->num_of_events;
     new_member->id=((Member)member)->id;
     new_member->next=NULL;
