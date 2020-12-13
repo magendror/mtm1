@@ -328,6 +328,13 @@ EventManagerResult emChangeEventDate(EventManager em, int event_id, Date new_dat
     if(event_id<0){
         return EM_INVALID_EVENT_ID;
     }
+    Event event=findEvent(em,event_id);
+    //checks if theser a conflicted date&&name event in the new date
+    PQ_FOREACH(Event,current_event,em->event_list){
+        if((dateCompare(current_event->date,new_date)==0)&&(strcmp(current_event->event_name,event->event_name)==0)){
+            return EM_EVENT_ALREADY_EXISTS;
+        }
+    }
     PQ_FOREACH(Event,current_event,em->event_list){
         if (current_event->event_id==event_id){
             if(dateCompare(current_event->date,new_date)==0){
