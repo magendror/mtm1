@@ -166,14 +166,28 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element, PQE
         queue->iterator=NULL;
         return PQ_ELEMENT_DOES_NOT_EXISTS;
     }
-    pqInsert(queue,change_element_following->next->element_data,new_priority);
-    Element to_be_deleted = change_element_following->next;
-    change_element_following->next=change_element_following->next->next;
-    queue->free_element(to_be_deleted->element_data);
-    queue->free_priority(to_be_deleted->element_priority);
-    free(to_be_deleted);
-    queue->iterator=NULL;
-    return PQ_SUCCESS;
+    if(queue->equal_elements(element,change_element_following->element_data)){
+        assert(queue->equal_elements(queue->first_element->element_data,element));
+        Element to_be_deleted = change_element_following;
+        if(change_element_following->next!=NULL){
+            change_element_following->next=change_element_following->next->next;
+        }
+        queue->free_element(to_be_deleted->element_data);
+        queue->free_priority(to_be_deleted->element_priority);
+        free(to_be_deleted);
+        queue->iterator=NULL;
+        return PQ_SUCCESS;
+    }
+    else {
+        pqInsert(queue,change_element_following->next->element_data,new_priority);
+        Element to_be_deleted = change_element_following->next;
+        change_element_following->next=change_element_following->next->next;
+        queue->free_element(to_be_deleted->element_data);
+        queue->free_priority(to_be_deleted->element_priority);
+        free(to_be_deleted);
+        queue->iterator=NULL;
+        return PQ_SUCCESS;
+    }
 }
 
 PQElement pqGetFirst(PriorityQueue queue){
