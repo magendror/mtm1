@@ -155,16 +155,19 @@ static bool equal_member(PQElement member1,PQElement member2){
 }
 
 static PQElementPriority copyMemberNumOfEvents(PQElementPriority num_of_events){
-    int* new_num_of_events = malloc(sizeof(int)); 
-        if(new_num_of_events==NULL){
-            return NULL;
-        }
-        *new_num_of_events=*(int*)num_of_events;
+    //int* new_num_of_events = malloc(sizeof(int)); 
+        //if(new_num_of_events==NULL){
+            //return NULL;
+      //  }
+      int* new_num_of_events=(int*)num_of_events;
+       // *new_num_of_events=*(int*)num_of_events;
     return new_num_of_events;
 }
 
 static void freeMemberNumOfEvents(PQElementPriority member_num_of_events){
-    free(member_num_of_events);
+    member_num_of_events=NULL;
+
+    //free(member_num_of_events);
 }
 
 static int compareMemberNumOfEvents(PQElement member1,PQElement member2){
@@ -188,7 +191,9 @@ EventManager createEventManager(Date date){
                                         ,copyMemberNumOfEvents,freeMemberNumOfEvents
                                         ,compareMemberNumOfEvents);
     event_manager->start_date=dateCopy(date);
+    //event_manager->start_date=date;
     event_manager->current_date=dateCopy(date);
+    //event_manager->current_date=date;
     return event_manager;
 }
 
@@ -240,18 +245,23 @@ EventManagerResult emAddEventByDate(EventManager em, char* event_name, Date date
         return EM_OUT_OF_MEMORY;
     }
     new_event->date=dateCopy(date);
+    //new_event->date=date;
+    //dateDestroy(date);
     if(new_event->date==NULL){
         free(new_event->event_name);
         free(new_event);
         return EM_OUT_OF_MEMORY;
     }
-    dateDestroy(date);
+    //dateDestroy(date);
     new_event->event_id=event_id;
     new_event->event_name=event_name;
     new_event->first_member=NULL;
     new_event->member_iterator=NULL;
     pqInsert(em->event_list,new_event,new_event->date);
-    freeEvent(new_event);
+    //freeEvent(new_event);
+    dateDestroy(new_event->date);//
+    //free(new_event->event_name);
+    free(new_event);
     return EM_SUCCESS;
 }
 
