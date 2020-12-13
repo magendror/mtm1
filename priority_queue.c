@@ -168,13 +168,10 @@ PriorityQueueResult pqChangePriority(PriorityQueue queue, PQElement element, PQE
     }
     if(queue->equal_elements(element,change_element_following->element_data)){
         assert(queue->equal_elements(queue->first_element->element_data,element));
-        Element to_be_deleted = change_element_following;
-        if(change_element_following->next!=NULL){
-            change_element_following->next=change_element_following->next->next;
-        }
-        queue->free_element(to_be_deleted->element_data);
-        queue->free_priority(to_be_deleted->element_priority);
-        free(to_be_deleted);
+        PQElement copy_element_data = queue->copy_element(change_element_following->element_data);
+        pqRemove(queue);
+        pqInsert(queue,copy_element_data,new_priority);
+        queue->free_element(copy_element_data);
         queue->iterator=NULL;
         return PQ_SUCCESS;
     }
