@@ -568,19 +568,16 @@ void emPrintAllEvents(EventManager em, const char* file_name){
     if(write_to_file==NULL){
         return;
     }
-    bool first_was_written=false;
     PQ_FOREACH(Event,current_event,em->event_list){
         int day,month,year;
         dateGet(current_event->date,&day,&month,&year);
-        if(first_was_written){
-            fprintf(write_to_file,"\n");
-        }
         fprintf(write_to_file,"%s,%d.%d.%d",current_event->event_name,day,month,year);
         current_event->member_iterator=current_event->first_member;
         while (current_event->member_iterator!=NULL){
             fprintf(write_to_file,",%s",current_event->member_iterator->name);
+            current_event->member_iterator=current_event->member_iterator->next;
         }
-        first_was_written=true;      
+        fprintf(write_to_file,"\n");     
     }
     fclose(write_to_file);
 }
