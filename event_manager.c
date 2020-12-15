@@ -432,7 +432,8 @@ static void connectMemberToEvent(EventManager em, Member member, int event_id){
 static void connectEventToMember(EventManager em, Member member){
     int old_num_of_events=member->num_of_events;
     member->num_of_events++;
-    pqChangePriority(em->member_list,member,&old_num_of_events,&(member->num_of_events));
+    int new_num_of_events=member->num_of_events;
+    pqChangePriority(em->member_list,member,&old_num_of_events,&new_num_of_events);
 }
 
 EventManagerResult emAddMemberToEvent(EventManager em, int member_id, int event_id){
@@ -488,11 +489,10 @@ static void disConnectMemberToEvent(EventManager em, Member member, int event_id
 }
 
 static void disConnectEventToMember(EventManager em, Member member){
-    PQElementPriority old_priority=&(member->num_of_events);
+    int old_priority=member->num_of_events;
     member->num_of_events--;
     int new_priority=member->num_of_events;
-    PQElementPriority p_new_priority=&new_priority;
-    pqChangePriority(em->member_list,member,old_priority,p_new_priority);
+    pqChangePriority(em->member_list,member,&old_priority,&new_priority);
 }
 
 EventManagerResult emRemoveMemberFromEvent (EventManager em, int member_id, int event_id){
@@ -526,15 +526,23 @@ EventManagerResult emTick(EventManager em, int days){
     if(em==NULL){
         return EM_NULL_ARGUMENT;
     }
-    if(days<0){
+    if(days<=0){
         return EM_INVALID_DATE;
     }
     for (int i=0; i<days;i++){
         dateTick(em->current_date);
     }
-    while((dateCompare(((Event)pqGetFirst(em->event_list))->date,em->current_date)<0)&&(pqGetSize(em->event_list)>0)){
-            pqRemove(em->event_list);
+    while((pqGetSize(em->event_list)>0)&&
+    (dateCompare(((Event)pqGetFirst(em->event_list))->date,em->current_date)<0)){
+        Event relevent_event = (Event)pqGetFirst(em->event_list);
+        relevent_event->member_iterator=relevent_event->first_member;
+        while(relevent_event->member_iterator!=NULL){
+            Member relevent_member=findMember(em,relevent_event->member_iterator->id);
+            disConnectEventToMember(em,relevent_member);
+            relevent_event->member_iterator=relevent_event->member_iterator->next;
         }
+        pqRemove(em->event_list);
+    }
     return EM_SUCCESS;
 }
 
@@ -560,15 +568,19 @@ void emPrintAllEvents(EventManager em, const char* file_name){
     if(write_to_file==NULL){
         return;
     }
+    bool first_was_written=false;
     PQ_FOREACH(Event,current_event,em->event_list){
         int day,month,year;
         dateGet(current_event->date,&day,&month,&year);
+        if(first_was_written){
+            fprintf(write_to_file,"\n");
+        }
         fprintf(write_to_file,"%s,%d.%d.%d",current_event->event_name,day,month,year);
         current_event->member_iterator=current_event->first_member;
         while (current_event->member_iterator!=NULL){
             fprintf(write_to_file,",%s",current_event->member_iterator->name);
         }
-        fprintf(write_to_file,"\n");
+        first_was_written=true;      
     }
     fclose(write_to_file);
 }
@@ -580,6 +592,7 @@ void emPrintAllResponsibleMembers(EventManager em, const char* file_name){
     }
     PQ_FOREACH(Member,current_member,em->member_list){
         if(current_member->num_of_events==0){
+            fclose(write_to_file);
             return;
         }
         fprintf(write_to_file,"%s,%d\n",current_member->name,current_member->num_of_events);
