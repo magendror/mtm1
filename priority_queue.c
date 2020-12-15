@@ -84,6 +84,7 @@ int pqGetSize(PriorityQueue queue){
     return pq_size;
 }
 
+//create the element struct with the relevent PQElement & PQElementPriority
 static Element elementCreate(PriorityQueue queue,PQElement element, PQElementPriority priority){
     Element new_element=malloc(sizeof(struct element_struct));
     if(!new_element){
@@ -140,6 +141,7 @@ PriorityQueueResult pqInsert(PriorityQueue queue, PQElement element, PQElementPr
     return PQ_SUCCESS;
 }
 
+//finds the element which the element which follows it is the point of intrest
 static Element findElementFollowing(PriorityQueue queue, PQElement element, PQElementPriority priority){
     if((queue->equal_elements(element,queue->first_element->element_data))&&
     (queue->compare_priorities(queue->first_element->element_priority,priority)==0)){
