@@ -8,9 +8,8 @@
 #include <string.h>
 
 #define EM_IS_NULL -1
+#define NEGATIVE_NUM -1
 #define POSITIVE_NUM 1
-#define NEGATIVE_NUM -1 
-
 
 typedef struct Member_t{
     int id;
