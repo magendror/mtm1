@@ -8,6 +8,9 @@
 #include <string.h>
 
 #define EM_IS_NULL -1
+#define POSITIVE_NUM 1
+#define NEGATIVE_NUM -1 
+
 
 typedef struct Member_t{
     int id;
@@ -145,10 +148,10 @@ static bool equal_member(PQElement member1,PQElement member2){
 
 static int compareMemberNumOfEvents(PQElementPriority member1,PQElementPriority member2){
     if(((Member)member1)->num_of_events>((Member)member2)->num_of_events){
-        return 1;
+        return POSITIVE_NUM;
     }
     else if (((Member)member1)->num_of_events<((Member)member2)->num_of_events){
-        return -1;
+        return NEGATIVE_NUM;
     }
     else{
         return ((Member)member2)->id-((Member)member1)->id;

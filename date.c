@@ -1,7 +1,12 @@
 #include "date.h"
 #include <stdbool.h>
 #include <stdlib.h>
-
+#define POS_NUM 1
+#define NEG_NUM -1 
+#define MAX_DAY 30
+#define MIN_DAY 1
+#define MIN_MONTH 1
+#define MAX_MONTH 12
 struct Date_t{
     int day;
     int month;
@@ -9,8 +14,8 @@ struct Date_t{
 };
 
 static bool isDateLegal(int day, int month){
-    bool day_legal=(day>=1)&&(day<=30);
-    bool month_legal=(month>=1)&&(month<=12);
+    bool day_legal=(day>=MIN_DAY)&&(day<=MAX_DAY);
+    bool month_legal=(month>=MIN_MONTH)&&(month<=MAX_MONTH);
     return (month_legal&&day_legal);
 }
 
@@ -54,25 +59,25 @@ int dateCompare(Date date1, Date date2){
         return 0;
     }
     if (date1->year<date2->year){
-        return -1;
+        return NEG_NUM;
     }
     else if (date1->year>date2->year){
-        return 1;
+        return POS_NUM;
     }
     else{
         if (date1->month<date2->month){
-            return -1;
+            return NEG_NUM;
         }
         
         else if (date1->month>date2->month){
-            return 1;
+            return POS_NUM;
         }
         else{
             if (date1->day<date2->day){
-                return -1;
+                return NEG_NUM;
             }
             else if (date1->day>date2->day){
-                return 1;
+                return POS_NUM;
             }
             else{
                 return 0;
@@ -83,10 +88,10 @@ int dateCompare(Date date1, Date date2){
 
 void dateTick(Date date){
     date->day+=1;
-    if(date->day>30){
+    if(date->day>MAX_DAY){
         date->month+=1;
         date->day=1;
-        if(date->month>12){
+        if(date->month>MAX_MONTH){
             date->year+=1;
             date->month=1;
         }
