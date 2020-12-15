@@ -137,13 +137,13 @@ void destroyEventManager(EventManager em){
     free(em);
 }
 
-
 static bool equal_member(PQElement member1,PQElement member2){
     bool equal_id=(((Member)member1)->id==((Member)member2)->id);
     bool equal_name=(strcmp(((Member)member1)->name,((Member)member2)->name)==0);
     return ((equal_id)&&(equal_name));
 }
 
+//compare num of events, if equal returns the id of members diffrence
 static int compareMemberNumOfEvents(PQElementPriority member1,PQElementPriority member2){
     if(((Member)member1)->num_of_events>((Member)member2)->num_of_events){
         return POSITIVE_NUM;
@@ -174,7 +174,7 @@ EventManager createEventManager(Date date){
     return event_manager;
 }
 
-EventManagerResult validDataCheck(EventManager em, char* event_name, Date date, int event_id){
+static EventManagerResult validDataCheck(EventManager em, char* event_name, Date date, int event_id){
     //null argument check
     if(em==NULL||event_name==NULL||date==NULL){
         return EM_NULL_ARGUMENT;
