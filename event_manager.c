@@ -49,7 +49,6 @@ static PQElement copy_member(PQElement member){
         free(new_member);
         return NULL;
     }
-
     strcpy(new_member_name,((Member)member)->name);
     new_member->name=new_member_name;
     new_member->num_of_events=((Member)member)->num_of_events;
